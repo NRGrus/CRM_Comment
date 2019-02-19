@@ -3,9 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Comment;
+use App\Http\Requests\CreateComment;
+use App\Http\Requests\UpdateComment;
 use App\Http\Resources\CommentResource;
 use App\Subject;
-use Illuminate\Http\Request;
 
 class CommentController extends Controller
 {
@@ -27,10 +28,10 @@ class CommentController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  \App\Http\Requests\CreateComment  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(CreateComment $request)
     {
         $subject = Subject::create([
             'subject_id'    => $request->subject_id,
@@ -55,26 +56,36 @@ class CommentController extends Controller
      */
     public function show(Comment $comment)
     {
-        return new CommentResource($comment);
+        $arr = json_decode($comment->payload);
+
+        if (($arr != null && array_key_exists('show', $arr) && in_array(auth()->user()->id, $arr->show))
+            || auth()->user()->id === $comment->author_id) {
+
+            return new CommentResource($comment);
+        }
+
+        return response()->json(['error' => 'You do not have ability to show this comment'], 403);
     }
 
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  \App\Http\Requests\UpdateComment  $request
      * @param  Comment $comment
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Comment $comment)
+    public function update(UpdateComment $request, Comment $comment)
     {
-        if (auth()->user()->id !== $comment->author_id)
-        {
-            return response()->json(['error' => 'You can only edit your own comments'], 403);
+        $arr = json_decode($comment->payload);
+
+        if (($arr != null && array_key_exists('update', $arr) && in_array(auth()->user()->id, $arr->update))
+            || auth()->user()->id === $comment->author_id) {
+
+            $comment->update($request->only(['text', 'payload']));
+
+            return new CommentResource($comment);
         }
-
-        $comment->update($request->only(['text', 'payload']));
-
-        return new CommentResource($comment);
+        return response()->json(['error' => 'You do not have ability to edit this comment'], 403);
     }
 
     /**
@@ -85,8 +96,15 @@ class CommentController extends Controller
      */
     public function destroy(Comment $comment)
     {
-        $comment->delete();
+        $arr = json_decode($comment->payload);
 
-        return response()->json(null, 204);
+        if (($arr != null && array_key_exists('delete', $arr) && in_array(auth()->user()->id, $arr->delete))
+                        || auth()->user()->id === $comment->author_id) {
+
+            $comment->delete();
+            return response()->json(null, 204);
+        }
+
+        return response()->json(['error' => 'You do not have ability to delete this comment'], 403);
     }
 }
