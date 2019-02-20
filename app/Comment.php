@@ -14,8 +14,12 @@ class Comment extends Model
     ];
 
 
-    protected $fillable =[
-        'author_id', 'text', 'subject_type', 'subject_id', 'payload'
+    protected $fillable = [
+        'author_id', 'text', 'subject_type', 'subject_id'
+    ];
+
+    protected $hidden = [
+        'deleted_at', 'created_at', 'updated_at'
     ];
 
 
@@ -24,8 +28,8 @@ class Comment extends Model
         return $this->belongsTo(Subject::class);
     }
 
-    public function author()
+    public function permissions()
     {
-        return $this->belongsTo(User::class, 'author_id');
+        return $this->hasMany(CommentPermission::class, 'comment_id');
     }
 }

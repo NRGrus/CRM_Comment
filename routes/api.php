@@ -19,6 +19,6 @@ Route::group(['prefix' => 'amicus'], function () {
     Route::post('login', 'AuthController@login')->name('login');
 
 
-    Route::apiResource('comments', 'CommentController');
-
+    Route::apiResource('comments', 'CommentsController')->except(['index']);
+    Route::apiResource('subject_comments', 'SubjectCommentsController')->only(['show']);
 });

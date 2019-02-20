@@ -2,10 +2,10 @@
 
 namespace App\Http\Requests;
 
+use Dogovor24\Authorization\Services\AuthUserService;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Support\Facades\Auth;
 
-class CreateComment extends FormRequest
+class IndexCommentRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -14,7 +14,7 @@ class CreateComment extends FormRequest
      */
     public function authorize()
     {
-        return Auth::check();
+        return (new AuthUserService())->checkAuth();
     }
 
     /**
@@ -25,9 +25,7 @@ class CreateComment extends FormRequest
     public function rules()
     {
         return [
-            'text'          => 'required',
-            'subject_id'    => 'required|numeric|min:1',
-            'subject_type'  => 'required|without_spaces'
+            //
         ];
     }
 }
